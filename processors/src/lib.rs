@@ -63,7 +63,7 @@ pub fn process(input: &Path, output: &Path, context: &Context) -> utils::error::
                         error: err.to_string(),
                     })?;
 
-                let data = processor.process(data, entry.path())?;
+                let data = processor.process(data, PathBuf::from(entry_path).as_path())?;
 
                 file.write_all(&data[..])
                     .map_err(|err| SquashError::FailedToWrite {

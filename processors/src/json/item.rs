@@ -3,7 +3,7 @@ use json::JsonValue;
 use regex::Regex;
 use std::path::Path;
 use utils::error::Result;
-use utils::{get_array, get_object, get_option_object};
+use utils::{get_array, get_object};
 
 pub struct JsonItemOptimizer {
     regex: Regex,
@@ -12,7 +12,7 @@ pub struct JsonItemOptimizer {
 impl JsonItemOptimizer {
     pub fn new() -> JsonItemOptimizer {
         JsonItemOptimizer {
-            regex: Regex::new(r"^(?:.+/)?assets/.+/items/.+\.json$").unwrap(),
+            regex: Regex::new(r"^(?:[^/]+/)?assets/[^/]+/items/.+?\.json$").unwrap(),
         }
     }
 
@@ -79,7 +79,7 @@ impl JsonItemOptimizer {
 
                     new_vec.push(JsonValue::Object(object));
                 }
-                object.insert("property", JsonValue::Array(new_vec));
+                object.insert("entries", JsonValue::Array(new_vec));
 
                 match utils::get_optional_field_as_object(&object, "fallback") {
                     Some(value) => {

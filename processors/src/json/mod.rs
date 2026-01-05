@@ -1,8 +1,10 @@
 mod item;
 mod model;
+mod block_replacements;
 
 use crate::json::item::JsonItemOptimizer;
 use crate::json::model::JsonModelOptimizer;
+use crate::json::block_replacements::JsonBlockReplacementOptimizer;
 use crate::FileProcessor;
 use json::JsonValue;
 use std::path::Path;
@@ -18,6 +20,7 @@ impl JsonFileProcessor {
             processors: vec![
                 Box::new(JsonModelOptimizer::new()),
                 Box::new(JsonItemOptimizer::new()),
+                Box::new(JsonBlockReplacementOptimizer::new()),
             ],
         }
     }
