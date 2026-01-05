@@ -79,7 +79,7 @@ impl JsonProcessor for JsonBlockReplacementOptimizer {
         self.regex.is_match(path.to_str().unwrap())
     }
 
-    fn process(&self, path: &Path, object: &JsonValue) -> Result<JsonValue> {
+    fn process(&self, _: &Path, object: &JsonValue) -> Result<JsonValue> {
         let mut data = get_object(object)?.clone();
         return Ok(self.optimize(&mut data)?);
     }

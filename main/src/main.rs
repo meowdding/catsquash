@@ -2,7 +2,7 @@ use std::fs;
 use clap::Arg;
 use clap::{ArgAction, Command};
 use meta::Context;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 
 fn main() {
     let matches = Command::new("Catsquash")
