@@ -7,46 +7,73 @@ use std::path::Path;
 pub enum SquashError {
     // packing error
     PackingError(CatError),
-    Context { path: String, other: Box<SquashError> },
+    Context {
+        path: String,
+        other: Box<SquashError>,
+    },
 
     // os level errors
-    FailedToRead { path: String, error: String },
-    FailedToWrite { path: String, error: String },
-    FileError { error: String },
+    FailedToRead {
+        path: String,
+        error: String,
+    },
+    FailedToWrite {
+        path: String,
+        error: String,
+    },
+    FileError {
+        error: String,
+    },
 
     // data errors
-    FailedToParseJson { path: String, error: String },
-    ExpectedType { expected: String, actual: String },
-    FieldError { field: String, other: Box<SquashError> },
+    FailedToParseJson {
+        path: String,
+        error: String,
+    },
+    ExpectedType {
+        expected: String,
+        actual: String,
+    },
+    FieldError {
+        field: String,
+        other: Box<SquashError>,
+    },
+    FailedToParsePng {
+        path: String,
+        error: String,
+    },
+    InvalidPngFile {
+        path: String,
+        reason: String,
+    },
 }
 
 impl SquashError {
-    fn failed_helper<T, E>(
-        result: std::result::Result<T, E>,
-        path: &Path,
-        mapper: fn(String, String) -> SquashError,
-    ) -> Result<T>
+    pub fn failed_to_parse_json<E>(path: &Path) -> impl Fn(E) -> SquashError
     where
         E: Error,
     {
-        result.map_err(|err| mapper(path.display().to_string(), err.to_string()))
-    }
-
-    pub fn failed_to_parse_json<T, E>(result: std::result::Result<T, E>, path: &Path) -> Result<T>
-    where
-        E: Error,
-    {
-        Self::failed_helper(result, path, |path, error| SquashError::FailedToParseJson {
-            path,
-            error,
-        })
-    }
-
-    pub fn context<T>(result: Result<T>, path: &Path) -> Result<T> {
-        result.map_err(|err| SquashError::Context {
+        return |error| SquashError::FailedToParseJson {
+            error: error.to_string(),
             path: path.display().to_string(),
-            other: Box::new(err),
-        })
+        };
+    }
+
+    pub fn failed_to_parse_png<E>(path: &Path) -> impl Fn(E) -> SquashError
+    where
+        E: Error,
+    {
+        return |error| SquashError::FailedToParsePng {
+            error: error.to_string(),
+            path: path.display().to_string(),
+        };
+    }
+
+    pub fn context(path: &Path) -> impl Fn(SquashError) -> SquashError {
+        return |error| SquashError::Context {
+            other: Box::new(error),
+            path: path.display().to_string(),
+        };
     }
 }
 
@@ -59,10 +86,12 @@ impl Into<i32> for SquashError {
 
             SquashError::FailedToRead { .. } => -400,
             SquashError::FailedToWrite { .. } => -401,
-            SquashError::FileError{ .. } => -402,
+            SquashError::FileError { .. } => -402,
 
             SquashError::FailedToParseJson { .. } => 200,
-            SquashError::ExpectedType { .. } => 201,
+            SquashError::FailedToParsePng { .. } => 201,
+            SquashError::InvalidPngFile { .. } => 202,
+            SquashError::ExpectedType { .. } => 203,
         }
     }
 }
@@ -73,13 +102,13 @@ impl Display for SquashError {
                 f.write_str("Failed to squash due to packing error: ")?;
                 std::fmt::Display::fmt(&cat, f)
             }
-            SquashError::Context { path, other} => {
+            SquashError::Context { path, other } => {
                 f.write_str("An error occurred while processing '")?;
                 std::fmt::Display::fmt(path, f)?;
                 f.write_str("'\n")?;
                 Debug::fmt(other, f)
             }
-            SquashError::FieldError { field, other} => {
+            SquashError::FieldError { field, other } => {
                 f.write_str("An error occurred at '")?;
                 std::fmt::Display::fmt(field, f)?;
                 f.write_str("'\n")?;
@@ -98,7 +127,7 @@ impl Display for SquashError {
                 f.write_str("' due to: ")?;
                 std::fmt::Display::fmt(&error, f)
             }
-            SquashError::FileError {  error } => {
+            SquashError::FileError { error } => {
                 f.write_str("An unknown file error occurred due to: ")?;
                 std::fmt::Display::fmt(&error, f)
             }
@@ -108,6 +137,18 @@ impl Display for SquashError {
                 std::fmt::Display::fmt(&path, f)?;
                 f.write_str("' due to: ")?;
                 std::fmt::Display::fmt(&error, f)
+            }
+            SquashError::FailedToParsePng { path, error } => {
+                f.write_str("Failed to parse png file '")?;
+                std::fmt::Display::fmt(&path, f)?;
+                f.write_str("' due to: ")?;
+                std::fmt::Display::fmt(&error, f)
+            }
+            SquashError::InvalidPngFile { path, reason } => {
+                f.write_str("Png file at '")?;
+                std::fmt::Display::fmt(&path, f)?;
+                f.write_str("' is invalid beacause of: ")?;
+                std::fmt::Display::fmt(&reason, f)
             }
             SquashError::ExpectedType { expected, actual } => {
                 f.write_str("Expected '")?;

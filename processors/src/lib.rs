@@ -1,4 +1,5 @@
 mod json;
+mod png;
 
 use crate::json::JsonFileProcessor;
 use meta::Context;
@@ -7,6 +8,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use utils::error::{Result, SquashError};
+use crate::png::PngFileProcessor;
 
 pub fn process(input: &Path, output: &Path, context: &Context) -> utils::error::Result<()> {
     let mut prefix = input.display().to_string();
@@ -97,7 +99,10 @@ struct FileProcessors {
 impl FileProcessors {
     fn new() -> Self {
         FileProcessors {
-            processors: vec![Box::new(JsonFileProcessor::new())],
+            processors: vec![
+                Box::new(JsonFileProcessor::new()),
+                Box::new(PngFileProcessor::new()),
+            ],
         }
     }
 }

@@ -41,25 +41,21 @@ impl FileProcessor for JsonFileProcessor {
     }
 
     fn process(&self, input: Vec<u8>, path: &Path) -> Result<Vec<u8>> {
-        let mut json = SquashError::failed_to_parse_json(
-            json::parse(
-                String::from_utf8(input)
-                    .map_err(|x| SquashError::FileError {
-                        error: x.to_string(),
-                    })?
-                    .as_str(),
-            ),
-            path,
-        )?;
+        let mut json = json::parse(
+            String::from_utf8(input)
+                .map_err(|x| SquashError::FileError {
+                    error: x.to_string(),
+                })?
+                .as_str(),
+        )
+        .map_err(SquashError::failed_to_parse_json(path))?;
 
         for file_processor in &self.processors {
             if file_processor.can_process(path, &json) {
-                return SquashError::context(
-                    file_processor
-                        .process(path, &mut json)
-                        .map(|json| json.dump().into_bytes()),
-                    path,
-                );
+                return file_processor
+                    .process(path, &mut json)
+                    .map(|json| json.dump().into_bytes())
+                    .map_err(SquashError::context(path));
             }
         }
 
