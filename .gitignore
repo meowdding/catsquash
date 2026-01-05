@@ -16,3 +16,7 @@ target
 **/mutants.out*/
 
 .idea
+
+*.cats
+input
+test

@@ -1,6 +1,13 @@
-[package]
-name = "catsquash"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["main", "utils", "processors"]
+resolver = "3"
 
-[dependencies]
+[workspace.dependencies]
+packing = { git = "https://github.com/meowdding/cats-file-format.git", rev = "46702dda96051ded168b6c5b4594a29a37ec9c13" }
+meta = { git = "https://github.com/meowdding/cats-file-format.git", rev = "46702dda96051ded168b6c5b4594a29a37ec9c13" }
+clap = { version = "4.5.54" }
+walkdir = "2.5.0"
+json = "0.12.4"
+utils = { path = "utils" }
+processors = { path = "processors" }
+regex = "1.12.2"

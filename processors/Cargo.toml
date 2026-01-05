@@ -1,0 +1,11 @@
+[package]
+name = "processors"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+json = { workspace = true }
+utils = { workspace = true }
+regex = { workspace = true }
+walkdir = { workspace = true }
+meta = { workspace = true }
