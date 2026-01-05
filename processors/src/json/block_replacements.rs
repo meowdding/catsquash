@@ -42,7 +42,7 @@ impl JsonBlockReplacementOptimizer {
     }
 
     fn optimize(&self, object: &mut json::object::Object) -> Result<JsonValue> {
-        utils::defaulted_identifier(object, "type", "catharsis");
+        utils::defaulted_identifier(object, "type", "catharsis")?;
         match utils::get_field_as_string(object, "type")?.as_str() {
             "random" => {}
             "condition" => {
