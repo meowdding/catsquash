@@ -8,3 +8,4 @@ packing = { workspace = true }
 meta = { workspace = true }
 processors = { workspace = true }
 clap = { workspace = true }
+utils = { workspace = true }

@@ -9,3 +9,4 @@ utils = { workspace = true }
 regex = { workspace = true }
 walkdir = { workspace = true }
 meta = { workspace = true }
+oxipng = { workspace = true }

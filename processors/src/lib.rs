@@ -8,12 +8,12 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use utils::error::{Result, SquashError};
+use utils::SquashOptions;
 use crate::png::PngFileProcessor;
 
-pub fn process(input: &Path, output: &Path, context: &Context) -> utils::error::Result<()> {
+pub fn process(input: &Path, output: &Path, options: &SquashOptions) -> utils::error::Result<()> {
     let mut prefix = input.display().to_string();
     prefix.push_str("/");
-    println!("{prefix}");
 
     let processor = FileProcessors::new();
 
@@ -39,13 +39,13 @@ pub fn process(input: &Path, output: &Path, context: &Context) -> utils::error::
             error: err.to_string(),
         })?;
         if !entry.path().is_file() {
-            if context.verbose {
+            if options.verbose {
                 println!("Skipping non file {entry_path}!")
             }
             continue;
         }
 
-        if context.verbose {
+        if options.verbose {
             println!("Processing file {entry_path}")
         }
 
@@ -63,7 +63,7 @@ pub fn process(input: &Path, output: &Path, context: &Context) -> utils::error::
                         error: err.to_string(),
                     })?;
 
-                let data = processor.process(data, PathBuf::from(entry_path).as_path())?;
+                let data = processor.process(data, PathBuf::from(entry_path).as_path(), &options)?;
 
                 file.write_all(&data[..])
                     .map_err(|err| SquashError::FailedToWrite {
@@ -110,5 +110,5 @@ impl FileProcessors {
 pub trait FileProcessor {
     fn can_process(&self, path: &Path) -> bool;
 
-    fn process(&self, data: Vec<u8>, path: &Path) -> Result<Vec<u8>>;
+    fn process(&self, data: Vec<u8>, path: &Path, options: &SquashOptions) -> Result<Vec<u8>>;
 }

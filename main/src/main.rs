@@ -1,8 +1,11 @@
-use std::fs;
 use clap::Arg;
 use clap::{ArgAction, Command};
 use meta::Context;
-use std::path::{Path};
+use std::fs;
+use std::path::Path;
+use std::process::exit;
+use utils::error::{Result, SquashError};
+use utils::SquashOptions;
 
 fn main() {
     let matches = Command::new("Catsquash")
@@ -22,6 +25,12 @@ fn main() {
                 .action(ArgAction::SetFalse),
         )
         .arg(
+            Arg::new("oxipng")
+                .short('o')
+                .long("oxipng")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
             Arg::new("archive_name")
                 .required(true)
                 .help("The name of the output file, including the file extension.")
@@ -35,6 +44,16 @@ fn main() {
         )
         .get_matches();
 
+    match handle(matches) {
+        Err(err) => {
+            eprintln!("{}", err);
+            exit(err.into())
+        }
+        Ok(_) => exit(0),
+    }
+}
+
+fn handle(matches: clap::ArgMatches) -> Result<()> {
     let archive_name = Path::new(
         matches
             .get_one::<String>("archive_name")
@@ -47,18 +66,26 @@ fn main() {
             .expect("Expected input name to be present!"),
     );
 
-    let context = Context {
+    let options = SquashOptions {
         verbose: matches.get_flag("verbose"),
         gzip: matches.get_flag("gzip"),
+        oxipng: matches.get_flag("oxipng"),
     };
 
     let temp = std::env::temp_dir().join("catsquash");
 
     if temp.is_dir() && temp.exists() {
-        println!("{}", temp.display());
-        fs::remove_dir_all(&temp).expect("meow");
+        fs::remove_dir_all(&temp).map_err(|err| SquashError::FileError {
+            error: err.to_string(),
+        })?;
     }
 
-    processors::process(input, &temp, &context).expect("meow");
-    packing::packing::pack(&temp, archive_name, &context).expect("meow");
+    processors::process(input, &temp, &options)?;
+    packing::packing::pack(&temp, archive_name, &Context {
+        verbose: options.verbose,
+        gzip: options.gzip,
+    })
+        .map_err(|err| SquashError::PackingError(err))?;
+
+    Ok(())
 }

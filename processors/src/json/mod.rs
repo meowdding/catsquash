@@ -9,6 +9,7 @@ use crate::FileProcessor;
 use json::JsonValue;
 use std::path::Path;
 use utils::error::{Result, SquashError};
+use utils::SquashOptions;
 
 pub struct JsonFileProcessor {
     processors: Vec<Box<dyn JsonProcessor>>,
@@ -43,7 +44,7 @@ impl FileProcessor for JsonFileProcessor {
         }
     }
 
-    fn process(&self, input: Vec<u8>, path: &Path) -> Result<Vec<u8>> {
+    fn process(&self, input: Vec<u8>, path: &Path, options: &SquashOptions) -> Result<Vec<u8>> {
         let mut json = json::parse(
             String::from_utf8(input)
                 .map_err(|x| SquashError::FileError {

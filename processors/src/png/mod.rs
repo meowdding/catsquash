@@ -1,7 +1,10 @@
 use crate::FileProcessor;
+use oxipng::{Deflater, Options, StripChunks, ZopfliOptions};
 use std::io::{BufRead, BufReader, Read};
+use std::num::NonZeroU64;
 use std::path::Path;
 use utils::error::{Result, SquashError};
+use utils::SquashOptions;
 
 pub struct PngFileProcessor {}
 
@@ -24,7 +27,8 @@ impl PngFileProcessor {
 
     fn check_header(&self, data: &mut impl Read, path: &Path) -> Result<()> {
         let mut magic_number = [0u8; 8];
-        data.read_exact(&mut magic_number).map_err(SquashError::failed_to_parse_png(path))?;
+        data.read_exact(&mut magic_number)
+            .map_err(SquashError::failed_to_parse_png(path))?;
         if magic_number != Self::PNG_MAGIC_NUMBER {
             Err(SquashError::InvalidPngFile {
                 path: path.display().to_string(),
@@ -51,14 +55,35 @@ fn read_type(buffer: &mut impl Read) -> std::result::Result<[u8; 4], std::io::Er
 impl FileProcessor for PngFileProcessor {
     fn can_process(&self, path: &Path) -> bool {
         match path.extension() {
-            None => false,
+            None => {
+                println!("{}", path.display());
+                false
+            }
             Some(str) => match str.to_str().unwrap_or("").to_lowercase().as_str() {
                 "png" => true,
                 _ => false,
             },
         }
     }
-    fn process(&self, vec: Vec<u8>, path: &Path) -> Result<Vec<u8>> {
+
+    fn process(&self, vec: Vec<u8>, path: &Path, options: &SquashOptions) -> Result<Vec<u8>> {
+        if options.oxipng {
+            let mut options = Options::max_compression();
+            options.strip = StripChunks::Safe;
+            options.deflater = Deflater::Zopfli(ZopfliOptions {
+                iteration_count: NonZeroU64::new(32).unwrap(),
+                ..Default::default()
+            });
+
+            let result = oxipng::optimize_from_memory(&vec[..], &options).map_err(|err| SquashError::OxipngError {
+                path: path.display().to_string(),
+                error: format!("{}", err),
+            })?;
+            println!("Compressed {} from {} -> {}", path.display(), vec.len(), result.len());
+
+            return Ok(result);
+        }
+
         let mut new_data = Vec::<u8>::new();
         let mut data = BufReader::new(&vec[..]);
 

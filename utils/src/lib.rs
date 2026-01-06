@@ -165,3 +165,9 @@ pub fn defaulted_identifier(
 
     Ok(())
 }
+
+pub struct SquashOptions {
+    pub oxipng: bool,
+    pub gzip: bool,
+    pub verbose: bool,
+}

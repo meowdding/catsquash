@@ -46,6 +46,10 @@ pub enum SquashError {
         path: String,
         reason: String,
     },
+    OxipngError {
+        path: String,
+        error: String,
+    },
 }
 
 impl SquashError {
@@ -92,6 +96,7 @@ impl Into<i32> for SquashError {
             SquashError::FailedToParsePng { .. } => 201,
             SquashError::InvalidPngFile { .. } => 202,
             SquashError::ExpectedType { .. } => 203,
+            SquashError::OxipngError { .. } => 204,
         }
     }
 }
@@ -156,6 +161,12 @@ impl Display for SquashError {
                 f.write_str("' but got '")?;
                 std::fmt::Display::fmt(actual, f)?;
                 f.write_str("'!")
+            }
+            SquashError::OxipngError { path, error } => {
+                f.write_str("Failed to apply oxipng on '")?;
+                std::fmt::Display::fmt(path, f)?;
+                f.write_str("' due to: ")?;
+                std::fmt::Display::fmt(error, f)
             }
         }
     }

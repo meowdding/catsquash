@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 meta = { workspace = true }
 json = { workspace = true }
+oxipng = { workspace = true }
