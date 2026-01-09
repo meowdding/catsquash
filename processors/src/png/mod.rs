@@ -56,7 +56,6 @@ impl FileProcessor for PngFileProcessor {
     fn can_process(&self, path: &Path) -> bool {
         match path.extension() {
             None => {
-                println!("{}", path.display());
                 false
             }
             Some(str) => match str.to_str().unwrap_or("").to_lowercase().as_str() {

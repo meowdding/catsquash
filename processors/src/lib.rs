@@ -2,14 +2,13 @@ mod json;
 mod png;
 
 use crate::json::JsonFileProcessor;
-use meta::Context;
+use crate::png::PngFileProcessor;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use utils::error::{Result, SquashError};
 use utils::SquashOptions;
-use crate::png::PngFileProcessor;
 
 pub fn process(input: &Path, output: &Path, options: &SquashOptions) -> utils::error::Result<()> {
     let mut prefix = input.display().to_string();
@@ -45,6 +44,16 @@ pub fn process(input: &Path, output: &Path, options: &SquashOptions) -> utils::e
             continue;
         }
 
+        if entry
+            .path()
+            .file_name()
+            .and_then(|ostr| ostr.to_str())
+            .map(|str| str.to_string().eq_ignore_ascii_case(".DS_Store"))
+            .unwrap_or(false) {
+            println!("Skipping ds_store {entry_path}!");
+            continue;
+        }
+
         if options.verbose {
             println!("Processing file {entry_path}")
         }
@@ -63,7 +72,8 @@ pub fn process(input: &Path, output: &Path, options: &SquashOptions) -> utils::e
                         error: err.to_string(),
                     })?;
 
-                let data = processor.process(data, PathBuf::from(entry_path).as_path(), &options)?;
+                let data =
+                    processor.process(data, PathBuf::from(entry_path).as_path(), &options)?;
 
                 file.write_all(&data[..])
                     .map_err(|err| SquashError::FailedToWrite {
