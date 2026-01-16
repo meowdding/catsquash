@@ -7,3 +7,4 @@ edition = "2024"
 meta = { workspace = true }
 json = { workspace = true }
 oxipng = { workspace = true }
+tokio = { workspace = true }

@@ -1,15 +1,17 @@
+mod block_replacements;
 mod item;
 mod model;
-mod block_replacements;
+mod tooltip;
 
+use crate::FileProcessor;
+use crate::json::block_replacements::JsonBlockReplacementOptimizer;
 use crate::json::item::JsonItemOptimizer;
 use crate::json::model::JsonModelOptimizer;
-use crate::json::block_replacements::JsonBlockReplacementOptimizer;
-use crate::FileProcessor;
+use crate::json::tooltip::JsonTooltipOptimizer;
 use json::JsonValue;
 use std::path::Path;
-use utils::error::{Result, SquashError};
 use utils::SquashOptions;
+use utils::error::{Result, SquashError};
 
 pub struct JsonFileProcessor {
     processors: Vec<Box<dyn JsonProcessor>>,
@@ -22,6 +24,7 @@ impl JsonFileProcessor {
                 Box::new(JsonModelOptimizer::new()),
                 Box::new(JsonItemOptimizer::new()),
                 Box::new(JsonBlockReplacementOptimizer::new()),
+                Box::new(JsonTooltipOptimizer::new()),
             ],
         }
     }
@@ -44,7 +47,7 @@ impl FileProcessor for JsonFileProcessor {
         }
     }
 
-    fn process(&self, input: Vec<u8>, path: &Path, options: &SquashOptions) -> Result<Vec<u8>> {
+    fn process(&self, input: Vec<u8>, path: &Path, _: &SquashOptions) -> Result<Vec<u8>> {
         let mut json = json::parse(
             String::from_utf8(input)
                 .map_err(|x| SquashError::FileError {

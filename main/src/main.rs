@@ -4,10 +4,11 @@ use meta::Context;
 use std::fs;
 use std::path::Path;
 use std::process::exit;
-use utils::error::{Result, SquashError};
 use utils::SquashOptions;
+use utils::error::{Result, SquashError};
 
-fn main() {
+#[tokio::main(worker_threads = 4)]
+async fn main() {
     let matches = Command::new("Catsquash")
         .author("Mona, mona@mona.cat")
         .version("1.0.0")
@@ -44,7 +45,7 @@ fn main() {
         )
         .get_matches();
 
-    match handle(matches) {
+    match handle(matches).await {
         Err(err) => {
             eprintln!("{}", err);
             exit(err.into())
@@ -53,7 +54,7 @@ fn main() {
     }
 }
 
-fn handle(matches: clap::ArgMatches) -> Result<()> {
+async fn handle(matches: clap::ArgMatches) -> Result<()> {
     let archive_name = Path::new(
         matches
             .get_one::<String>("archive_name")
@@ -80,12 +81,16 @@ fn handle(matches: clap::ArgMatches) -> Result<()> {
         })?;
     }
 
-    processors::process(input, &temp, &options)?;
-    packing::packing::pack(&temp, archive_name, &Context {
-        verbose: options.verbose,
-        gzip: options.gzip,
-    })
-        .map_err(|err| SquashError::PackingError(err))?;
+    processors::process(&input, &temp, options.clone()).await?;
+    packing::packing::pack(
+        &temp,
+        archive_name,
+        &Context {
+            verbose: options.verbose,
+            gzip: options.gzip,
+        },
+    )
+    .map_err(|err| SquashError::PackingError(err))?;
 
     Ok(())
 }

@@ -1,10 +1,10 @@
 use crate::error::SquashError;
-use json::object::Object;
 use json::JsonValue;
+use json::object::Object;
 
 pub mod error;
 
-pub fn identifier(object: &mut json::object::Object, field: &str) -> error::Result<()>{
+pub fn identifier(object: &mut json::object::Object, field: &str) -> error::Result<()> {
     defaulted_identifier(object, field, "minecraft")
 }
 pub fn value_identifier(object: &mut json::JsonValue, field: &str) -> error::Result<()> {
@@ -50,15 +50,24 @@ pub fn get_field_as_string(value: &Object, field: &str) -> error::Result<String>
 }
 
 pub fn get_optional_field_as_object(value: &Object, field: &str) -> Option<error::Result<Object>> {
-    value.get(field).and_then(|entry| Some(wrap_field_error(get_object(entry), field)))
+    value
+        .get(field)
+        .and_then(|entry| Some(wrap_field_error(get_object(entry), field)))
 }
 
-pub fn get_optional_field_as_array(value: &Object, field: &str) -> Option<error::Result<Vec<JsonValue>>> {
-    value.get(field).and_then(|entry| Some(wrap_field_error(get_array(entry), field)))
+pub fn get_optional_field_as_array(
+    value: &Object,
+    field: &str,
+) -> Option<error::Result<Vec<JsonValue>>> {
+    value
+        .get(field)
+        .and_then(|entry| Some(wrap_field_error(get_array(entry), field)))
 }
 
 pub fn get_optional_field_as_string(value: &Object, field: &str) -> Option<error::Result<String>> {
-    value.get(field).and_then(|entry| Some(wrap_field_error(get_string(entry), field)))
+    value
+        .get(field)
+        .and_then(|entry| Some(wrap_field_error(get_string(entry), field)))
 }
 
 pub fn get_object(value: &json::JsonValue) -> error::Result<Object> {
@@ -166,6 +175,7 @@ pub fn defaulted_identifier(
     Ok(())
 }
 
+#[derive(Clone)]
 pub struct SquashOptions {
     pub oxipng: bool,
     pub gzip: bool,

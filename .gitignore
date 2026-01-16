@@ -20,3 +20,6 @@ target
 *.cats
 input
 test
+
+**/.DS_Store
+output

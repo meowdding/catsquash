@@ -2,6 +2,7 @@ use meta::error::CatError;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::path::Path;
+use tokio::task::JoinError;
 
 #[derive(Debug, Clone)]
 pub enum SquashError {
@@ -11,6 +12,7 @@ pub enum SquashError {
         path: String,
         other: Box<SquashError>,
     },
+    JoinError,
 
     // os level errors
     FailedToRead {
@@ -87,6 +89,7 @@ impl Into<i32> for SquashError {
             SquashError::PackingError(cat) => cat.into(),
             SquashError::Context { other, .. } => <SquashError>::into(*other),
             SquashError::FieldError { other, .. } => <SquashError>::into(*other),
+            SquashError::JoinError => -300,
 
             SquashError::FailedToRead { .. } => -400,
             SquashError::FailedToWrite { .. } => -401,
@@ -119,6 +122,7 @@ impl Display for SquashError {
                 f.write_str("'\n")?;
                 Debug::fmt(other, f)
             }
+            SquashError::JoinError => f.write_str("Failed to join futures\n"),
 
             SquashError::FailedToRead { path, error } => {
                 f.write_str("Failed to read file '")?;
@@ -175,6 +179,12 @@ impl Display for SquashError {
 impl Into<SquashError> for meta::error::CatError {
     fn into(self) -> SquashError {
         SquashError::PackingError(self)
+    }
+}
+
+impl Into<SquashError> for JoinError {
+    fn into(self) -> SquashError {
+        SquashError::JoinError
     }
 }
 
