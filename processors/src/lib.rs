@@ -63,7 +63,9 @@ pub async fn process(
     options: SquashOptions,
 ) -> utils::error::Result<()> {
     let mut prefix = input.display().to_string();
-    prefix.push_str("/");
+    if !prefix.ends_with("/") {
+        prefix.push_str("/");
+    }
 
     let mut paths = Vec::<(String, PathBuf)>::new();
 
